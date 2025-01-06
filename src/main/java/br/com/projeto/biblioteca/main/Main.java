@@ -1,5 +1,7 @@
 package br.com.projeto.biblioteca.main;
 
+import br.com.projeto.biblioteca.model.Book;
+import br.com.projeto.biblioteca.model.BookData;
 import br.com.projeto.biblioteca.model.User;
 import br.com.projeto.biblioteca.repository.BookRepository;
 import br.com.projeto.biblioteca.repository.UserRepository;
@@ -33,7 +35,8 @@ public class Main {
         var menu = """
                 1 - Cadastrar usuário
                 2 - Cadastrar Livro
-                3 - Realizar Venda ou Aluguem do livro
+                3 - Cadastrar Cliente
+                4 - Realizar Venda ou Aluguem do livro
                 
                 0 - Sair
                 """;
@@ -53,6 +56,9 @@ public class Main {
                     registerBook();
                     break;
 //                case 3:
+//                    registerClient;
+//                    break;
+//                case 4:
 //                    sell();
 //                    break;
                 case 0:
@@ -120,5 +126,15 @@ public class Main {
         var quantity = scanner.nextInt();
 
         bookRepository.updateQuantity(id, quantity);
+    }
+
+    public void registerNewBook(){
+        System.out.println("Informe o nome do livro: ");
+        var title = scanner.nextLine();
+
+        var json = apiConsumer.getData(URL + title.replace(" ", "+") + "&key=" + API_KEY);
+        List<BookData> books = convertData.getList(json, BookData.class);
+
+        books.forEach(System.out::println);
     }
 }

@@ -26,6 +26,6 @@ public class ProjetoBibliotecaApplication implements CommandLineRunner {
 //		userRepository.save(userAdmin);
 
 		Main main = new Main(userRepository);
-		main.login();
+		main.registerNewBook();
 	}
 }
