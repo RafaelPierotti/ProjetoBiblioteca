@@ -2,6 +2,8 @@ package br.com.projeto.biblioteca.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "books")
 public class Book {
@@ -9,7 +11,7 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(unique = true)
-    private String title;
+    private List<String> title;
     private String subtitle;
     private String authors;
     private String publisher;
@@ -24,11 +26,11 @@ public class Book {
         this.id = id;
     }
 
-    public String getTitle() {
+    public List<String> getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
+    public void setTitle(List<String> title) {
         this.title = title;
     }
 

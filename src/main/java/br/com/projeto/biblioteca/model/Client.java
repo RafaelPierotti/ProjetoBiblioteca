@@ -10,6 +10,22 @@ public class Client {
     private Long id;
     private String name;
     private String phoneNumber;
+    @Column(unique = true)
+    private String cpf;
+
+    public Client(String name, String phoneNumber, String cpf) {
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.cpf = cpf;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
 
     public Long getId() {
         return id;

@@ -2,8 +2,10 @@ package br.com.projeto.biblioteca.main;
 
 import br.com.projeto.biblioteca.model.Book;
 import br.com.projeto.biblioteca.model.BookData;
+import br.com.projeto.biblioteca.model.Client;
 import br.com.projeto.biblioteca.model.User;
 import br.com.projeto.biblioteca.repository.BookRepository;
+import br.com.projeto.biblioteca.repository.ClientRepository;
 import br.com.projeto.biblioteca.repository.UserRepository;
 import br.com.projeto.biblioteca.service.APIConsumer;
 import br.com.projeto.biblioteca.service.ConvertData;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class Main {
@@ -23,19 +26,23 @@ public class Main {
     private UserRepository userRepository;
     @Autowired
     private BookRepository bookRepository;
+    @Autowired
+    private ClientRepository clientRepository;
 
     private final String URL = "https://www.googleapis.com/books/v1/volumes?q=";
     private final String API_KEY = "AIzaSyB0Rsj0E_cuhvXCT9Od36XvONWznBnLqqw";
 
-    public Main(UserRepository userRepository) {
+    public Main(UserRepository userRepository, ClientRepository clientRepository, BookRepository bookRepository) {
         this.userRepository = userRepository;
+        this.clientRepository = clientRepository;
+        this.bookRepository = bookRepository;
     }
 
     public void displayMenu(){
         var menu = """
                 1 - Cadastrar usuário
-                2 - Cadastrar Livro
-                3 - Cadastrar Cliente
+                2 - Cadastrar cliente
+                3 - Cadastrar livro
                 4 - Realizar Venda ou Aluguem do livro
                 
                 0 - Sair
@@ -53,11 +60,11 @@ public class Main {
                     registerUser();
                     break;
                 case 2:
+                    registerClient();
+                    break;
+                case 3:
                     registerBook();
                     break;
-//                case 3:
-//                    registerClient;
-//                    break;
 //                case 4:
 //                    sell();
 //                    break;
@@ -76,26 +83,61 @@ public class Main {
         System.out.println("Informe a senha do usuário " + user);
         var password = scanner.nextLine();
 
-        for (User u: users){
-            if (u.getName().equals(user) && u.getPassword().equals(password)){
-                System.out.println("Acessando...");
+        Optional<User> userFound = userRepository.findByNameEquals(user);
+
+        if (userFound.isPresent()){
+            User foundUser = userFound.get();
+            if (foundUser.getPassword().equals(password)){
+                System.out.println("Login realizado com o sucesso!");
                 displayMenu();
             } else {
-                System.out.println("Usuário ou senha incorreto!!");
+                System.out.println("Usuário ou senha inválidos!");
             }
         }
-
     }
 
     private void registerUser(){
+
         System.out.println("Informe o nome do usuário: ");
         var userName = scanner.nextLine();
-        System.out.println("Informe a senha do usuário: ");
-        var password = scanner.nextLine();
+        Optional<User> userFound = userRepository.findByNameEquals(userName);
 
-        User user = new User(userName, password);
+        if (userFound.isPresent()){
+            System.out.println("Usuário com o LOGIN " + userName + " já existente no sistema!");
+        } else {
+            System.out.println("Informe a senha do usuário: ");
+            var password = scanner.nextLine();
 
-        userRepository.save(user);
+            User newUser = new User(userName, password);
+
+            userRepository.save(newUser);
+            System.out.println("Usuário cadastrado com sucesso!");
+        }
+        displayMenu();
+    }
+
+    private void registerClient(){
+        System.out.println("Informe o CPF do cliente: ");
+        var cpf = scanner.nextLine();
+
+        Optional<Client> cpfFound = clientRepository.findByCpfEquals(cpf);
+
+        if (cpfFound.isPresent()){
+            System.out.println("CPF já cadastrado no sistema!");
+        } else {
+            System.out.println("Informe o nome completo do cliente: ");
+            var name = scanner.nextLine();
+
+            System.out.println("Informe o número de telefone do cliente: ");
+            var phoneNumber = scanner.nextLine();
+
+            Client newClient = new Client(name, phoneNumber, cpf);
+
+            clientRepository.save(newClient);
+
+            System.out.println("Cliente cadastrado no sistema!");
+        }
+        displayMenu();
     }
 
     private void registerBook(){
@@ -105,7 +147,7 @@ public class Main {
         if (option.toLowerCase().contains("si")){
             registerOldBook();
         } else if (option.toLowerCase().contains("na")){
-
+            registerNewBook();
         } else if (option.toLowerCase().contains("naos") || option.toLowerCase().contains("nao s")){
 
         } else {
