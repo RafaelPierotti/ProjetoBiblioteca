@@ -2,6 +2,9 @@ package br.com.projeto.biblioteca.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -11,6 +14,10 @@ public class User {
     @Column(unique = true)
     private String name;
     private String password;
+    @OneToMany
+    private List<Sell> sells = new ArrayList<>();
+    @OneToMany
+    private List<Rent> rents = new ArrayList<>();
 
     public User(){}
 

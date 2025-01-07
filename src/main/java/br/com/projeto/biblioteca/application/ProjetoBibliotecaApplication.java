@@ -1,7 +1,6 @@
-package br.com.projeto.biblioteca;
+package br.com.projeto.biblioteca.application;
 
 import br.com.projeto.biblioteca.main.Main;
-import br.com.projeto.biblioteca.model.Book;
 import br.com.projeto.biblioteca.model.User;
 import br.com.projeto.biblioteca.repository.BookRepository;
 import br.com.projeto.biblioteca.repository.ClientRepository;

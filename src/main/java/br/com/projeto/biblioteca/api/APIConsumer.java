@@ -1,6 +1,4 @@
-package br.com.projeto.biblioteca.service;
-
-import br.com.projeto.biblioteca.log.LogGenerator;
+package br.com.projeto.biblioteca.api;
 
 import java.io.IOException;
 import java.net.URI;

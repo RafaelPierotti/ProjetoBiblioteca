@@ -8,7 +8,7 @@ import br.com.projeto.biblioteca.model.User;
 import br.com.projeto.biblioteca.repository.BookRepository;
 import br.com.projeto.biblioteca.repository.ClientRepository;
 import br.com.projeto.biblioteca.repository.UserRepository;
-import br.com.projeto.biblioteca.service.APIConsumer;
+import br.com.projeto.biblioteca.api.APIConsumer;
 import br.com.projeto.biblioteca.service.ConvertData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Main{
 
@@ -49,7 +47,7 @@ public class Main{
         var menu = """
                 1 - Cadastrar usuário
                 2 - Cadastrar cliente
-                3 - Cadastrar livro
+                3 - Cadastrar ou adicionar livro 
                 4 - Realizar Venda ou Aluguem do livro
                 
                 0 - Sair
@@ -72,9 +70,9 @@ public class Main{
                 case 3:
                     registerBook();
                     break;
-//                case 4:
-//                    sell();
-//                    break;
+                case 4:
+                    saleOrRent();
+                    break;
                 case 0:
                     System.out.println("Saindo...");
                     break;
@@ -148,6 +146,7 @@ public class Main{
             clientRepository.save(newClient);
 
             System.out.println("Cliente cadastrado no sistema!");
+            LogGenerator.generateLog("Cliente " + name + " cadastrado no sistema");
         }
         displayMenu();
     }
@@ -171,19 +170,24 @@ public class Main{
         System.out.println("Informe o nome do livro: ");
         var title = scanner.nextLine();
 
-        Optional<Book> bookFound =  bookRepository.findByTitleContainingIgnoreCase(title);
+        List<Book> booksFound =  bookRepository.findByTitleContainingIgnoreCase(title);
 
-        if (bookFound.isPresent()){
+        if (!booksFound.isEmpty()){
 
-            System.out.println(bookFound.get().getId() +  bookFound.get().getTitle());
+            for (Book book : booksFound) {
+                System.out.println("ID: " + book.getId() + " Título: " + book.getTitle());
+            }
 
             System.out.println("Informe o ID exato do livro: ");
             var id = scanner.nextLong();
+            scanner.nextLine();
 
             System.out.println("Informe a quantidade que você quer adicionar: ");
             var quantity = scanner.nextInt();
+            scanner.nextLine();
 
             bookRepository.updateQuantity(id, quantity);
+            LogGenerator.generateLog("Adicionado " + quantity + " livros do ID: " + id);
         } else {
             System.out.println("Livro não encontrado");
         }
@@ -202,12 +206,8 @@ public class Main{
             JSONObject volumeInfo = jsonObject.getJSONArray("items").getJSONObject(0).getJSONObject("volumeInfo");
 
             JSONArray authorsArray = volumeInfo.getJSONArray("authors");
-//            List<String> authors = new ArrayList<>();
-//            for (int i = 0; i < authorsArray.length(); i++) {
-//                authors.add(authorsArray.getString(i));
-//            }
 
-            String firsAuthor = authorsArray.getString(0);
+            String firsAuthor = authorsArray.getString(0); // pegando somente o primeiro autor do livro
 
             BookData bookData = new BookData(
                     volumeInfo.getString("title"),
@@ -221,7 +221,7 @@ public class Main{
             var quantity = scanner.nextInt();
 
 
-            Book book = new Book();
+            Book book = new Book(); // convertendo os dados para a minha classe
             book.setTitle(bookData.title());
             book.setSubtitle(bookData.subtitle());
             book.setAuthors(firsAuthor);
@@ -233,11 +233,15 @@ public class Main{
 
             bookRepository.save(book);
             System.out.println("Livro registrado com sucesso!");
+            LogGenerator.generateLog(book.getTitle() + "adicionado ao sistema");
             displayMenu();
         } else {
             System.out.println("Livro não encontrado!");
             displayMenu();
         }
+    }
+
+    private void saleOrRent(){
 
     }
 }
