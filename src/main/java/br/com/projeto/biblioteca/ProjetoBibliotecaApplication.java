@@ -38,5 +38,6 @@ public class ProjetoBibliotecaApplication implements CommandLineRunner {
 
 		Main main = new Main(userRepository, clientRepository, bookRepository);
 		main.login();
+
 	}
 }

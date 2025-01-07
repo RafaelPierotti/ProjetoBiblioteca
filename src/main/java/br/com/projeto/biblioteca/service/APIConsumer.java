@@ -1,5 +1,7 @@
 package br.com.projeto.biblioteca.service;
 
+import br.com.projeto.biblioteca.log.LogGenerator;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -23,7 +25,7 @@ public class APIConsumer {
             throw new RuntimeException(e);
         }
 
-        String json = response.body();
-        return json;
+        return response.body();
+
     }
 }

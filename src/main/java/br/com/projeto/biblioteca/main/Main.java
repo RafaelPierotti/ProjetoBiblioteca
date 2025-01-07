@@ -1,5 +1,6 @@
 package br.com.projeto.biblioteca.main;
 
+import br.com.projeto.biblioteca.log.LogGenerator;
 import br.com.projeto.biblioteca.model.Book;
 import br.com.projeto.biblioteca.model.BookData;
 import br.com.projeto.biblioteca.model.Client;
@@ -9,12 +10,17 @@ import br.com.projeto.biblioteca.repository.ClientRepository;
 import br.com.projeto.biblioteca.repository.UserRepository;
 import br.com.projeto.biblioteca.service.APIConsumer;
 import br.com.projeto.biblioteca.service.ConvertData;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Main {
 
@@ -74,6 +80,7 @@ public class Main {
                 default:
                     System.out.println("Opção inválida!!");
             }
+
         }
     }
 
@@ -90,8 +97,10 @@ public class Main {
             if (foundUser.getPassword().equals(password)){
                 System.out.println("Login realizado com o sucesso!");
                 displayMenu();
+                LogGenerator.generateLog("Login do usuário " + user + " realizado!");
             } else {
                 System.out.println("Usuário ou senha inválidos!");
+                login();
             }
         }
     }
@@ -159,24 +168,70 @@ public class Main {
         System.out.println("Informe o nome do livro: ");
         var title = scanner.nextLine();
 
-        bookRepository.findByTitleContainingIgnoreCase(title);
+        Optional<Book> bookFound =  bookRepository.findByTitleContainingIgnoreCase(title);
 
-        System.out.println("Informe o ID exato do livro: ");
-        var id = scanner.nextLong();
+        if (bookFound.isPresent()){
 
-        System.out.println("Informe a quantidade que você quer adicionar: ");
-        var quantity = scanner.nextInt();
+            System.out.println(bookFound.get().getId() +  bookFound.get().getTitle());
 
-        bookRepository.updateQuantity(id, quantity);
+            System.out.println("Informe o ID exato do livro: ");
+            var id = scanner.nextLong();
+
+            System.out.println("Informe a quantidade que você quer adicionar: ");
+            var quantity = scanner.nextInt();
+
+            bookRepository.updateQuantity(id, quantity);
+        } else {
+            System.out.println("Livro não encontrado");
+        }
+
     }
 
     public void registerNewBook(){
+        ObjectMapper mapper = new ObjectMapper();
         System.out.println("Informe o nome do livro: ");
         var title = scanner.nextLine();
 
         var json = apiConsumer.getData(URL + title.replace(" ", "+") + "&key=" + API_KEY);
-        List<BookData> books = convertData.getList(json, BookData.class);
 
-        books.forEach(System.out::println);
+        JSONObject jsonObject = new JSONObject(json);
+        if (jsonObject.has("items") && jsonObject.getJSONArray("items").length() > 0) {
+            JSONObject volumeInfo = jsonObject.getJSONArray("items").getJSONObject(0).getJSONObject("volumeInfo");
+
+            JSONArray authorsArray = volumeInfo.getJSONArray("authors");
+            List<String> authors = new ArrayList<>();
+            for (int i = 0; i < authorsArray.length(); i++) {
+                authors.add(authorsArray.getString(i));
+            }
+
+            BookData bookData = new BookData(
+                    volumeInfo.getString("title"),
+                    volumeInfo.optString("subtitle", ""),
+                    authors,
+                    volumeInfo.optString("publisher", ""),
+                    volumeInfo.optString("description", "")
+            );
+
+            System.out.println("Qual a quantidade de livros do " + title + " que você vai adicionar? ");
+            var quantity = scanner.nextInt();
+
+            Book book = new Book();
+            book.setTitle(bookData.title());
+            book.setSubtitle(bookData.subtitle());
+            book.setAuthors(authors);
+            book.setPublisher(bookData.publisher());
+            book.setDescription(bookData.description());
+            book.setQuantity(quantity);
+
+            System.out.println(book);
+
+            bookRepository.save(book);
+            System.out.println("Livro registrado com sucesso!");
+            displayMenu();
+        } else {
+            System.out.println("Livro não encontrado!");
+            displayMenu();
+        }
+
     }
 }

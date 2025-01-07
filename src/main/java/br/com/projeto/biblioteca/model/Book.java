@@ -11,10 +11,13 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(unique = true)
-    private List<String> title;
+    private String title;
     private String subtitle;
-    private String authors;
+    @ElementCollection
+    @CollectionTable(name = "book_authors", joinColumns = @JoinColumn(name = "book_id"))
+    private List<String> authors;
     private String publisher;
+    @Column(name = "description", length = 10000)
     private String description;
     private Integer quantity;
 
@@ -26,11 +29,11 @@ public class Book {
         this.id = id;
     }
 
-    public List<String> getTitle() {
+    public String getTitle() {
         return title;
     }
 
-    public void setTitle(List<String> title) {
+    public void setTitle(String title) {
         this.title = title;
     }
 
@@ -42,11 +45,11 @@ public class Book {
         this.subtitle = subtitle;
     }
 
-    public String getAuthors() {
+    public List<String> getAuthors() {
         return authors;
     }
 
-    public void setAuthors(String authors) {
+    public void setAuthors(List<String> authors) {
         this.authors = authors;
     }
 
@@ -72,5 +75,15 @@ public class Book {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    @Override
+    public String toString() {
+        return ", title='" + title + '\'' +
+                ", subtitle='" + subtitle + '\'' +
+                ", authors=" + authors +
+                ", publisher='" + publisher + '\'' +
+                ", description='" + description + '\'' +
+                ", quantity=" + quantity;
     }
 }
