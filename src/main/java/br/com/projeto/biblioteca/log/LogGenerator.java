@@ -7,52 +7,45 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class LogGenerator {
 
-    public static void generateLog(String message){
-        Path path = Paths.get("C:/Users/Rafael");
+    public static void generateLog(String message) throws IOException {
 
-        if (!Files.exists(path)){
-            try {
-                Files.createDirectory(path);
-            } catch (IOException e) {
-                throw new RuntimeException("Erro 1");
-            }
+        String userHome = System.getProperty("user.home");
+
+        String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
+
+        Path path = Paths.get("C:/Users/Sentry/Desktop/logs/");
+
+        if(!Files.exists(path)) {
+
+            Files.createDirectory(path);
+
         }
 
-        File log = new File("C:/Users/Rafael/Desktop/logs/logs.txt");
+        File log = new File("C:/Users/Sentry/Desktop/logs/logs.txt");
 
-        if (!log.exists()){
-            try {
-                log.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException("Erro 2");
-            }
+        if(!log.exists()) {
+
+            log.createNewFile();
+
         }
 
-        FileWriter fileWriter = null;
-        try {
-            fileWriter = new FileWriter(log, true);
-        } catch (IOException e) {
-            throw new RuntimeException("Erro 3");
-        }
+        FileWriter fw = new FileWriter(log, true);
+        BufferedWriter bw = new BufferedWriter(fw);
 
-        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        String logMessage = "[" + dateTime + "] " +  message;
 
-        try {
-            bufferedWriter.write(message);
-            bufferedWriter.newLine();
-        } catch (IOException e) {
-            throw new RuntimeException("Erro 4");
-        }
+        bw.write(logMessage);
+        bw.newLine();
 
-        try {
-            bufferedWriter.close();
-            fileWriter.close();
-        } catch (IOException e) {
-            throw new RuntimeException("Erro 5");
-        }
+        bw.close();
+        fw.close();
 
     }
+
 }

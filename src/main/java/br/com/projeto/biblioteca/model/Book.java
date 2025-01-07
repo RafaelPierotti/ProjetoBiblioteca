@@ -13,9 +13,7 @@ public class Book {
     @Column(unique = true)
     private String title;
     private String subtitle;
-    @ElementCollection
-    @CollectionTable(name = "book_authors", joinColumns = @JoinColumn(name = "book_id"))
-    private List<String> authors;
+    private String authors;
     private String publisher;
     @Column(name = "description", length = 10000)
     private String description;
@@ -45,11 +43,11 @@ public class Book {
         this.subtitle = subtitle;
     }
 
-    public List<String> getAuthors() {
+    public String getAuthors() {
         return authors;
     }
 
-    public void setAuthors(List<String> authors) {
+    public void setAuthors(String authors) {
         this.authors = authors;
     }
 

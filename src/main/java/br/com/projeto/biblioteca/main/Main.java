@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,7 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class Main {
+public class Main{
 
     private Scanner scanner = new Scanner(System.in);
     private APIConsumer apiConsumer = new APIConsumer();
@@ -44,7 +45,7 @@ public class Main {
         this.bookRepository = bookRepository;
     }
 
-    public void displayMenu(){
+    public void displayMenu() throws IOException{
         var menu = """
                 1 - Cadastrar usuário
                 2 - Cadastrar cliente
@@ -84,7 +85,7 @@ public class Main {
         }
     }
 
-    public void login(){
+    public void login() throws IOException {
         System.out.println("Informe o seu usuário: ");
         var user = scanner.nextLine();
         System.out.println("Informe a senha do usuário " + user);
@@ -96,16 +97,17 @@ public class Main {
             User foundUser = userFound.get();
             if (foundUser.getPassword().equals(password)){
                 System.out.println("Login realizado com o sucesso!");
+                LogGenerator.generateLog("Login do usuário " + user + " realizado");
                 displayMenu();
-                LogGenerator.generateLog("Login do usuário " + user + " realizado!");
             } else {
                 System.out.println("Usuário ou senha inválidos!");
+                LogGenerator.generateLog("Tentativa de login");
                 login();
             }
         }
     }
 
-    private void registerUser(){
+    private void registerUser() throws IOException {
 
         System.out.println("Informe o nome do usuário: ");
         var userName = scanner.nextLine();
@@ -121,11 +123,12 @@ public class Main {
 
             userRepository.save(newUser);
             System.out.println("Usuário cadastrado com sucesso!");
+            LogGenerator.generateLog("Usuário " + userName + " cadastrado no sistema");
         }
         displayMenu();
     }
 
-    private void registerClient(){
+    private void registerClient() throws IOException{
         System.out.println("Informe o CPF do cliente: ");
         var cpf = scanner.nextLine();
 
@@ -149,7 +152,7 @@ public class Main {
         displayMenu();
     }
 
-    private void registerBook(){
+    private void registerBook() throws IOException{
         System.out.println("O produto já está cadastrado no sistema? (Sim/Nao/Nao sei)");
         var option = scanner.nextLine();
 
@@ -164,7 +167,7 @@ public class Main {
         }
     }
 
-    private void registerOldBook(){
+    private void registerOldBook() throws IOException{
         System.out.println("Informe o nome do livro: ");
         var title = scanner.nextLine();
 
@@ -187,7 +190,7 @@ public class Main {
 
     }
 
-    public void registerNewBook(){
+    public void registerNewBook() throws IOException{
         ObjectMapper mapper = new ObjectMapper();
         System.out.println("Informe o nome do livro: ");
         var title = scanner.nextLine();
@@ -199,15 +202,17 @@ public class Main {
             JSONObject volumeInfo = jsonObject.getJSONArray("items").getJSONObject(0).getJSONObject("volumeInfo");
 
             JSONArray authorsArray = volumeInfo.getJSONArray("authors");
-            List<String> authors = new ArrayList<>();
-            for (int i = 0; i < authorsArray.length(); i++) {
-                authors.add(authorsArray.getString(i));
-            }
+//            List<String> authors = new ArrayList<>();
+//            for (int i = 0; i < authorsArray.length(); i++) {
+//                authors.add(authorsArray.getString(i));
+//            }
+
+            String firsAuthor = authorsArray.getString(0);
 
             BookData bookData = new BookData(
                     volumeInfo.getString("title"),
                     volumeInfo.optString("subtitle", ""),
-                    authors,
+                    firsAuthor,
                     volumeInfo.optString("publisher", ""),
                     volumeInfo.optString("description", "")
             );
@@ -215,10 +220,11 @@ public class Main {
             System.out.println("Qual a quantidade de livros do " + title + " que você vai adicionar? ");
             var quantity = scanner.nextInt();
 
+
             Book book = new Book();
             book.setTitle(bookData.title());
             book.setSubtitle(bookData.subtitle());
-            book.setAuthors(authors);
+            book.setAuthors(firsAuthor);
             book.setPublisher(bookData.publisher());
             book.setDescription(bookData.description());
             book.setQuantity(quantity);
