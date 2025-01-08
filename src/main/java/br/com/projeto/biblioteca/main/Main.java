@@ -2,13 +2,11 @@ package br.com.projeto.biblioteca.main;
 
 import br.com.projeto.biblioteca.log.LogGenerator;
 import br.com.projeto.biblioteca.model.*;
-import br.com.projeto.biblioteca.repository.BookRepository;
-import br.com.projeto.biblioteca.repository.ClientRepository;
-import br.com.projeto.biblioteca.repository.SellRepository;
-import br.com.projeto.biblioteca.repository.UserRepository;
+import br.com.projeto.biblioteca.repository.*;
 import br.com.projeto.biblioteca.service.api.APIConsumer;
 import br.com.projeto.biblioteca.service.ConvertData;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.catalina.valves.rewrite.RewriteCond;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +32,18 @@ public class Main{
     private ClientRepository clientRepository;
     @Autowired
     private SellRepository sellRepository;
+    @Autowired
+    private RentRepository rentRepository;
 
     private final String URL = "https://www.googleapis.com/books/v1/volumes?q=";
     private final String API_KEY = "AIzaSyB0Rsj0E_cuhvXCT9Od36XvONWznBnLqqw";
 
-    public Main(UserRepository userRepository, ClientRepository clientRepository, BookRepository bookRepository, SellRepository sellRepository) {
+    public Main(UserRepository userRepository, ClientRepository clientRepository, BookRepository bookRepository, SellRepository sellRepository, RentRepository rentRepository) {
         this.userRepository = userRepository;
         this.clientRepository = clientRepository;
         this.bookRepository = bookRepository;
         this.sellRepository = sellRepository;
+        this.rentRepository = rentRepository;
     }
 
     public void displayMenu() throws IOException{
@@ -76,9 +77,9 @@ public class Main{
                 case 4:
                     sellBook();
                     break;
-//                case 5:
-//                    rentBook();
-//                    break;
+                case 5:
+                    rentBook();
+                    break;
                 case 0:
                     System.out.println("Saindo...");
                     break;
@@ -305,8 +306,8 @@ public class Main{
             System.out.println("O total da venda foi de: " + total);
             System.out.println("\nQual será a forma de pagamento?");
             var methods = """
-                - Cartão de débito
-                - Cartão de crédito
+                - Débito
+                - Crédito
                 - Dinheiro
                 - Pix
                 """;
@@ -322,9 +323,64 @@ public class Main{
             sellRepository.save(sell);
 
             System.out.println("Venda realizada com sucesso!");
-            LogGenerator.generateLog("Venda realizada pelo usuário:  " + loggedUser.getName() + ", Itens vendidos: " + sell);
+            LogGenerator.generateLog("Venda realizada pelo usuário:  " + loggedUser.getName() + ", Especificações da venda " + sell);
         } else {
             System.out.println("Nenhum livro foi vendido.");
+        }
+
+    }
+
+    private void rentBook() throws IOException{
+        System.out.println("Insira o nome do cliente que irá realizar a locação: ");
+        var client = scanner.nextLine();
+
+        List<Client> clientFound = clientRepository.findByNameContainingIgnoreCase(client);
+
+        if (clientFound.isEmpty()) {
+            System.out.println("Cliente não encontrado!!");
+            return;
+        }
+        clientFound.forEach(c -> System.out.println("ID: " + c.getId() + " Nome: " + c.getName()));
+
+        System.out.println("Informe o ID do cliente: ");
+        var clientId = scanner.nextLong();
+        scanner.nextLine();
+
+        Optional<Client> foundClient = clientRepository.findByIdEquals(clientId);
+
+        if (foundClient.isEmpty()) {
+            System.out.println("Cliente não encontrado!");
+            return;
+        }
+        System.out.println("Informe o nome do livro que " + foundClient.get().getName() + " irá realizar a locação (SOMENTE UM TÍTULO POR PESSOA)");
+        var book = scanner.nextLine();
+
+        List<Book> bookFound = bookRepository.findByTitleContainingIgnoreCase(book);
+
+        if (bookFound.isEmpty()) {
+            System.out.println("Livro não encontrado!");
+            return;
+        }
+
+        bookFound.forEach(b -> System.out.println("ID: " + b.getId() + " Nome: " + b.getTitle()));
+
+        System.out.println("Informe o ID do livro: ");
+        var bookId = scanner.nextLong();
+        scanner.nextLine();
+
+        Optional<Book> idFound = bookRepository.findByIdEquals(bookId);
+
+        if (idFound.isPresent()) {
+
+
+            Rent rent = new Rent(foundClient.get().getName(), loggedUser, book);
+            rentRepository.save(rent);
+            System.out.println("Locação realizada com sucesso!");
+            LogGenerator.generateLog("Locação realizada com sucesso pelo usuário " + loggedUser.getName() + ", Especificações da locação " + rent);
+
+        } else {
+            System.out.println("Livro não encontrado!");
+            displayMenu();
         }
 
     }

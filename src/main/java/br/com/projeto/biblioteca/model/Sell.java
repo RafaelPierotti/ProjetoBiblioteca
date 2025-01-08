@@ -24,6 +24,8 @@ public class Sell {
     )
     private List<Book> books = new ArrayList<>();
 
+    public Sell(){}
+
     public Sell(Double total, Integer quantity, PaymentMethod paymentMethod, User user, List<Book> books) {
         this.total = total;
         this.quantity = quantity;
@@ -80,5 +82,13 @@ public class Sell {
         this.user = user;
     }
 
-
+    @Override
+    public String toString() {
+        return "id=" + id +
+                ", total=" + total +
+                ", quantity=" + quantity +
+                ", paymentMethod=" + paymentMethod +
+                ", user=" + user +
+                ", books=" + books;
+    }
 }

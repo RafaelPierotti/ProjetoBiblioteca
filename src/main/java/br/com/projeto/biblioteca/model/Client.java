@@ -2,6 +2,9 @@ package br.com.projeto.biblioteca.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "clients")
 public class Client {
@@ -12,12 +15,16 @@ public class Client {
     private String phoneNumber;
     @Column(unique = true)
     private String cpf;
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Rent> rents = new ArrayList<>();
 
     public Client(String name, String phoneNumber, String cpf) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.cpf = cpf;
     }
+
+
 
     public String getCpf() {
         return cpf;
@@ -49,5 +56,14 @@ public class Client {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public List<Rent> getRents() {
+        return rents;
+    }
+
+    public void setRents(List<Rent> rents) {
+        rents.forEach(r -> r.setClient(this));
+        this.rents = rents;
     }
 }

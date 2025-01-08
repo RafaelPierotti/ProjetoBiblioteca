@@ -1,9 +1,9 @@
 package br.com.projeto.biblioteca.model;
 
 public enum PaymentMethod {
-    cartaodebito("cartão de débito"),
-    cartaocredito("cartão de crédito"),
-    dinheito("dinheito"),
+    debito("débito"),
+    credito("crédito"),
+    dinheiro("dinheiro"),
     pix("pix");
 
     private String payment;

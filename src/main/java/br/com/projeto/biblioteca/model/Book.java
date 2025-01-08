@@ -22,6 +22,8 @@ public class Book {
     private Double price;
     @ManyToMany(mappedBy = "books")
     private List<Sell> sells = new ArrayList<>();
+    @ManyToMany(mappedBy = "books")
+    private List<Rent> rents = new ArrayList<>();
 
     public Long getId() {
         return id;
