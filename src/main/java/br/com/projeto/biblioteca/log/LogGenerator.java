@@ -19,7 +19,7 @@ public class LogGenerator {
 
         String dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
 
-        Path path = Paths.get("C:/Users/Sentry/Desktop/logs/");
+        Path path = Paths.get(userHome + "/Desktop/logs/");
 
         if(!Files.exists(path)) {
 
@@ -27,7 +27,7 @@ public class LogGenerator {
 
         }
 
-        File log = new File("C:/Users/Sentry/Desktop/logs/logs.txt");
+        File log = new File(userHome + "/Desktop/logs/logs.txt");
 
         if(!log.exists()) {
 

@@ -1,4 +1,4 @@
-package br.com.projeto.biblioteca.api;
+package br.com.projeto.biblioteca.service.api;
 
 import java.io.IOException;
 import java.net.URI;

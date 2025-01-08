@@ -1,14 +1,12 @@
 package br.com.projeto.biblioteca.main;
 
 import br.com.projeto.biblioteca.log.LogGenerator;
-import br.com.projeto.biblioteca.model.Book;
-import br.com.projeto.biblioteca.model.BookData;
-import br.com.projeto.biblioteca.model.Client;
-import br.com.projeto.biblioteca.model.User;
+import br.com.projeto.biblioteca.model.*;
 import br.com.projeto.biblioteca.repository.BookRepository;
 import br.com.projeto.biblioteca.repository.ClientRepository;
+import br.com.projeto.biblioteca.repository.SellRepository;
 import br.com.projeto.biblioteca.repository.UserRepository;
-import br.com.projeto.biblioteca.api.APIConsumer;
+import br.com.projeto.biblioteca.service.api.APIConsumer;
 import br.com.projeto.biblioteca.service.ConvertData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
@@ -27,20 +25,24 @@ public class Main{
     private APIConsumer apiConsumer = new APIConsumer();
     private ConvertData convertData = new ConvertData();
     private List<User> users = new ArrayList<>();
+    private User loggedUser;
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private BookRepository bookRepository;
     @Autowired
     private ClientRepository clientRepository;
+    @Autowired
+    private SellRepository sellRepository;
 
     private final String URL = "https://www.googleapis.com/books/v1/volumes?q=";
     private final String API_KEY = "AIzaSyB0Rsj0E_cuhvXCT9Od36XvONWznBnLqqw";
 
-    public Main(UserRepository userRepository, ClientRepository clientRepository, BookRepository bookRepository) {
+    public Main(UserRepository userRepository, ClientRepository clientRepository, BookRepository bookRepository, SellRepository sellRepository) {
         this.userRepository = userRepository;
         this.clientRepository = clientRepository;
         this.bookRepository = bookRepository;
+        this.sellRepository = sellRepository;
     }
 
     public void displayMenu() throws IOException{
@@ -48,7 +50,8 @@ public class Main{
                 1 - Cadastrar usuário
                 2 - Cadastrar cliente
                 3 - Cadastrar ou adicionar livro 
-                4 - Realizar Venda ou Aluguem do livro
+                4 - Realizar Venda 
+                5 - Relizar Locação
                 
                 0 - Sair
                 """;
@@ -71,8 +74,11 @@ public class Main{
                     registerBook();
                     break;
                 case 4:
-                    saleOrRent();
+                    sellBook();
                     break;
+//                case 5:
+//                    rentBook();
+//                    break;
                 case 0:
                     System.out.println("Saindo...");
                     break;
@@ -96,6 +102,7 @@ public class Main{
             if (foundUser.getPassword().equals(password)){
                 System.out.println("Login realizado com o sucesso!");
                 LogGenerator.generateLog("Login do usuário " + user + " realizado");
+                this.loggedUser = foundUser;
                 displayMenu();
             } else {
                 System.out.println("Usuário ou senha inválidos!");
@@ -152,15 +159,13 @@ public class Main{
     }
 
     private void registerBook() throws IOException{
-        System.out.println("O produto já está cadastrado no sistema? (Sim/Nao/Nao sei)");
+        System.out.println("O produto já está cadastrado no sistema? (Sim/Nao/)");
         var option = scanner.nextLine();
 
         if (option.toLowerCase().contains("si")){
             registerOldBook();
         } else if (option.toLowerCase().contains("na")){
             registerNewBook();
-        } else if (option.toLowerCase().contains("naos") || option.toLowerCase().contains("nao s")){
-
         } else {
             System.out.println("Opção inválida!!");
         }
@@ -174,9 +179,7 @@ public class Main{
 
         if (!booksFound.isEmpty()){
 
-            for (Book book : booksFound) {
-                System.out.println("ID: " + book.getId() + " Título: " + book.getTitle());
-            }
+            booksFound.forEach(b -> System.out.println("ID: " + b.getId() + " Título: " + b.getTitle()));
 
             System.out.println("Informe o ID exato do livro: ");
             var id = scanner.nextLong();
@@ -186,7 +189,7 @@ public class Main{
             var quantity = scanner.nextInt();
             scanner.nextLine();
 
-            bookRepository.updateQuantity(id, quantity);
+            bookRepository.addBook(id, quantity);
             LogGenerator.generateLog("Adicionado " + quantity + " livros do ID: " + id);
         } else {
             System.out.println("Livro não encontrado");
@@ -220,6 +223,9 @@ public class Main{
             System.out.println("Qual a quantidade de livros do " + title + " que você vai adicionar? ");
             var quantity = scanner.nextInt();
 
+            System.out.println("Qual o valor de venda desse livro? ");
+            var price = scanner.nextDouble();
+
 
             Book book = new Book(); // convertendo os dados para a minha classe
             book.setTitle(bookData.title());
@@ -228,6 +234,7 @@ public class Main{
             book.setPublisher(bookData.publisher());
             book.setDescription(bookData.description());
             book.setQuantity(quantity);
+            book.setPrice(price);
 
             System.out.println(book);
 
@@ -241,7 +248,84 @@ public class Main{
         }
     }
 
-    private void saleOrRent(){
+    private void sellBook() throws IOException{
+        System.out.println("Quantos livros serão vendidos?");
+        int numLivros = scanner.nextInt();
+        scanner.nextLine();
+
+        List<Book> booksToSell = new ArrayList<>(); // Lista de livros vendidos
+        int totalQuantity = 0;
+        double total = 0;
+
+        for (int i = 0; i < numLivros; i++) {
+            System.out.println("Insira o título do livro " + (i + 1));
+            var title = scanner.nextLine();
+
+            List<Book> booksFound = bookRepository.findByTitleContainingIgnoreCase(title);
+
+            if (!booksFound.isEmpty()) {
+                booksFound.forEach(b -> System.out.println("ID: " + b.getId() + " Título: " + b.getTitle()));
+
+                System.out.println("Informe o ID do livro: ");
+                var id = scanner.nextLong();
+                scanner.nextLine();
+
+                Optional<Book> idFound = bookRepository.findByIdEquals(id);
+
+                if (idFound.isPresent()) {
+
+                    System.out.println("Informe a quantidade de livros que serão vendidos do livro " + idFound.get().getTitle() + ":");
+                    var quantity = scanner.nextInt();
+                    scanner.nextLine();
+
+                    if (quantity > idFound.get().getQuantity()) {
+                        System.out.println("Quantidade indisponível para o livro: " + idFound.get().getTitle());
+                        System.out.println("\nQuantitade atual: " + idFound.get().getQuantity());
+                    } else {
+                        double subtotal = idFound.get().getPrice() * quantity;
+                        total += subtotal;
+                        totalQuantity += quantity;
+
+                        bookRepository.sellBook(id, quantity);
+                        booksToSell.add(idFound.get());
+
+                        System.out.println("Subtotal para " + idFound.get().getTitle() + ": " + subtotal);
+                    }
+                } else {
+                    System.out.println("Livro não encontrado!");
+                    displayMenu();
+                }
+            } else {
+                System.out.println("Livro não encontrado!");
+                displayMenu();
+            }
+        }
+
+        if (!booksToSell.isEmpty()) {
+            System.out.println("O total da venda foi de: " + total);
+            System.out.println("\nQual será a forma de pagamento?");
+            var methods = """
+                - Cartão de débito
+                - Cartão de crédito
+                - Dinheiro
+                - Pix
+                """;
+
+            System.out.println(methods);
+            var method = scanner.nextLine().trim();
+
+            PaymentMethod paymentMethod = PaymentMethod.valueOf(method.toLowerCase());
+
+            Sell sell = new Sell(total, totalQuantity, paymentMethod, loggedUser, booksToSell);
+
+            bookRepository.saveAll(booksToSell);
+            sellRepository.save(sell);
+
+            System.out.println("Venda realizada com sucesso!");
+            LogGenerator.generateLog("Venda realizada pelo usuário:  " + loggedUser.getName() + ", Itens vendidos: " + sell);
+        } else {
+            System.out.println("Nenhum livro foi vendido.");
+        }
 
     }
 }

@@ -2,6 +2,7 @@ package br.com.projeto.biblioteca.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,6 +19,9 @@ public class Book {
     @Column(name = "description", length = 10000)
     private String description;
     private Integer quantity;
+    private Double price;
+    @ManyToMany(mappedBy = "books")
+    private List<Sell> sells = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -73,6 +77,14 @@ public class Book {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
 
     @Override

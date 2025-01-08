@@ -16,5 +16,12 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE Book b SET b.quantity = b.quantity + :quantity WHERE b.id = :id")
-    int updateQuantity(@Param("id") Long id, @Param("quantity") Integer quantity);
+    int addBook(@Param("id") Long id, @Param("quantity") Integer quantity);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Book b SET b.quantity = b.quantity - :quantity WHERE b.id = :id")
+    int sellBook(@Param("id") Long id, @Param("quantity") Integer quantity);
+
+    Optional<Book> findByIdEquals(Long id);
 }

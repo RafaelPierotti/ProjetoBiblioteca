@@ -14,9 +14,9 @@ public class User {
     @Column(unique = true)
     private String name;
     private String password;
-    @OneToMany
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Sell> sells = new ArrayList<>();
-    @OneToMany
+    @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Rent> rents = new ArrayList<>();
 
     public User(){}
@@ -48,5 +48,23 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public List<Sell> getSells() {
+        return sells;
+    }
+
+    public void setSells(List<Sell> sells) {
+        sells.forEach(s -> s.setUser(this));
+        this.sells = sells;
+    }
+
+    public List<Rent> getRents() {
+        return rents;
+    }
+
+    public void setRents(List<Rent> rents) {
+        rents.forEach(r -> r.setUser(this));
+        this.rents = rents;
     }
 }
