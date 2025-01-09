@@ -1,21 +1,42 @@
 package br.com.projeto.biblioteca.model;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "devolutions")
 public class Devolution {
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @ManyToOne
     private User user;
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne
     private Rent rent;
     private String devolutionDate;
     private Double totalFees;
+
+    public Devolution(){}
 
     public Devolution(User user, Rent rent, String devolutionDate, Double totalFees) {
         this.user = user;
         this.rent = rent;
         this.devolutionDate = devolutionDate;
+        this.totalFees = totalFees;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Double getTotalFees() {
+        return totalFees;
+    }
+
+    public void setTotalFees(Double totalFees) {
         this.totalFees = totalFees;
     }
 

@@ -25,6 +25,9 @@ public class ProjetoBibliotecaApplication implements CommandLineRunner {
 	private SellRepository sellRepository;
 	@Autowired
 	private RentRepository rentRepository;
+	@Autowired
+	private DevolutionRepository devolutionRepository;
+
 
 	public static void main(String[] args) {
 		SpringApplication.run(ProjetoBibliotecaApplication.class, args);
@@ -32,7 +35,7 @@ public class ProjetoBibliotecaApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		Main main = new Main(userRepository, clientRepository, bookRepository, sellRepository, rentRepository);
+		Main main = new Main(userRepository, clientRepository, bookRepository, sellRepository, rentRepository, devolutionRepository);
 
 
 		var userFound = userRepository.findByNameEquals("admin");

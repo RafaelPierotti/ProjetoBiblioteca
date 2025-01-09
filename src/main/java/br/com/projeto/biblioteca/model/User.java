@@ -18,8 +18,9 @@ public class User {
     private List<Sell> sells = new ArrayList<>();
     @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Rent> rents = new ArrayList<>();
-    @OneToOne(mappedBy = "user")
-    private Devolution devolution;
+    @Transient
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Devolution> devolution;
 
     public User(){}
 

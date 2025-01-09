@@ -12,11 +12,11 @@ public class Rent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Client client;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private User user;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "rent_books",
             joinColumns = @JoinColumn(name = "rent_id"),
@@ -24,8 +24,8 @@ public class Rent {
     )
     private List<Book> books = new ArrayList<>();
     private String rentDate;
-    @OneToOne(mappedBy = "rent")
-    private Devolution devolution;
+    @OneToMany(mappedBy = "rent", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Devolution> devolution;
 
     public Rent(){}
 
