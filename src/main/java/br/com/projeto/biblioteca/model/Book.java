@@ -95,7 +95,6 @@ public class Book {
                 ", subtitle='" + subtitle + '\'' +
                 ", authors=" + authors +
                 ", publisher='" + publisher + '\'' +
-                ", description='" + description + '\'' +
                 ", quantity=" + quantity;
     }
 }

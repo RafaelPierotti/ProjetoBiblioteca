@@ -18,6 +18,8 @@ public class User {
     private List<Sell> sells = new ArrayList<>();
     @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Rent> rents = new ArrayList<>();
+    @OneToOne(mappedBy = "user")
+    private Devolution devolution;
 
     public User(){}
 
@@ -66,5 +68,11 @@ public class User {
     public void setRents(List<Rent> rents) {
         rents.forEach(r -> r.setUser(this));
         this.rents = rents;
+    }
+
+    @Override
+    public String toString() {
+        return "id=" + id +
+                ", name='" + name;
     }
 }

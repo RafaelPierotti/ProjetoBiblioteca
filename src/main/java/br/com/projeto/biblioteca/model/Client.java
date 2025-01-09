@@ -18,13 +18,14 @@ public class Client {
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Rent> rents = new ArrayList<>();
 
+    public Client(){
+            }
+
     public Client(String name, String phoneNumber, String cpf) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.cpf = cpf;
     }
-
-
 
     public String getCpf() {
         return cpf;
@@ -65,5 +66,13 @@ public class Client {
     public void setRents(List<Rent> rents) {
         rents.forEach(r -> r.setClient(this));
         this.rents = rents;
+    }
+
+    @Override
+    public String toString() {
+        return "cpf='" + cpf + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", name='" + name + '\'' +
+                ", id=" + id;
     }
 }

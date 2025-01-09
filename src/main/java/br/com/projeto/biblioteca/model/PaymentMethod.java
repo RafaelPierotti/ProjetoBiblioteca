@@ -12,8 +12,12 @@ public enum PaymentMethod {
         this.payment = payment;
     }
 
-    @Override
-    public String toString() {
-        return "payment='" + payment;
+    public static PaymentMethod correctWriting(String text) {
+        for (PaymentMethod paymentMethod : PaymentMethod.values()){
+            if (paymentMethod.payment.equalsIgnoreCase(text)){
+                return paymentMethod;
+            }
+        }
+        throw new IllegalArgumentException("Nenhuma categoria encontrada: " + text);
     }
 }

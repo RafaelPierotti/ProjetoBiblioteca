@@ -34,19 +34,18 @@ public class ProjetoBibliotecaApplication implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 		Main main = new Main(userRepository, clientRepository, bookRepository, sellRepository, rentRepository);
 
-		try {
-			var userFound = userRepository.findByNameEquals("admin");
 
-			if (userFound.isEmpty()){
-				User userAdmin = new User();
-				userAdmin.setName("admin");
-				userAdmin.setPassword("admin");
-				userRepository.save(userAdmin);
-				main.login();
-			} else {
-				main.login();
-			}
-		} catch (DataIntegrityViolationException e){}
+		var userFound = userRepository.findByNameEquals("admin");
+
+		if (userFound.isEmpty()){
+			User userAdmin = new User(); // criando usuário padrão do sistema
+			userAdmin.setName("admin");
+			userAdmin.setPassword("admin");
+			userRepository.save(userAdmin);
+			main.login();
+		} else {
+			main.login();
+		}
 
 	}
 }

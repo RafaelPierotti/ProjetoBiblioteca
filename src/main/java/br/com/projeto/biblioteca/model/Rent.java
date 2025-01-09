@@ -23,13 +23,17 @@ public class Rent {
             inverseJoinColumns = @JoinColumn(name = "book_id")
     )
     private List<Book> books = new ArrayList<>();
+    private String rentDate;
+    @OneToOne(mappedBy = "rent")
+    private Devolution devolution;
 
     public Rent(){}
 
-    public Rent(Client client, User user, List<Book> books) {
+    public Rent(Client client, User user, List<Book> books, String rentDate) {
         this.client = client;
         this.user = user;
         this.books = books;
+        this.rentDate = rentDate;
     }
 
     public Long getId() {
@@ -64,11 +68,20 @@ public class Rent {
         this.books = books;
     }
 
+    public String getRentDate() {
+        return rentDate;
+    }
+
+    public void setRentDate(String rentDate) {
+        this.rentDate = rentDate;
+    }
+
     @Override
     public String toString() {
         return "id=" + id +
                 ", client=" + client +
                 ", user=" + user +
-                ", books=" + books;
+                ", books=" + books +
+                ", data=" + rentDate;
     }
 }

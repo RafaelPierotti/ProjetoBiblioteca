@@ -12,10 +12,9 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class Main{
 
@@ -23,6 +22,10 @@ public class Main{
     private APIConsumer apiConsumer = new APIConsumer();
     private ConvertData convertData = new ConvertData();
     private List<User> users = new ArrayList<>();
+    private List<Client> clients = new ArrayList<>();
+    private List<Book> books = new ArrayList<>();
+    private List<Rent> rents = new ArrayList<>();
+    private List<Sell> sells =new ArrayList<>();
     private User loggedUser;
     @Autowired
     private UserRepository userRepository;
@@ -35,8 +38,11 @@ public class Main{
     @Autowired
     private RentRepository rentRepository;
 
+    private final String dateNow = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+    private final Double standardFees = 5.0;
     private final String URL = "https://www.googleapis.com/books/v1/volumes?q=";
     private final String API_KEY = "AIzaSyB0Rsj0E_cuhvXCT9Od36XvONWznBnLqqw";
+
 
     public Main(UserRepository userRepository, ClientRepository clientRepository, BookRepository bookRepository, SellRepository sellRepository, RentRepository rentRepository) {
         this.userRepository = userRepository;
@@ -53,6 +59,7 @@ public class Main{
                 3 - Cadastrar ou adicionar livro 
                 4 - Realizar Venda 
                 5 - Relizar Locação
+                6 - Realizar devolução
                 
                 0 - Sair
                 """;
@@ -79,6 +86,9 @@ public class Main{
                     break;
                 case 5:
                     rentBook();
+                    break;
+                case 6:
+                    returnRent();
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -135,6 +145,7 @@ public class Main{
     }
 
     private void registerClient() throws IOException{
+        listClients();
         System.out.println("Informe o CPF do cliente: ");
         var cpf = scanner.nextLine();
 
@@ -160,7 +171,7 @@ public class Main{
     }
 
     private void registerBook() throws IOException{
-        System.out.println("O produto já está cadastrado no sistema? (Sim/Nao/)");
+        System.out.println("O produto já está cadastrado no sistema? (Sim/Nao)");
         var option = scanner.nextLine();
 
         if (option.toLowerCase().contains("si")){
@@ -173,6 +184,7 @@ public class Main{
     }
 
     private void registerOldBook() throws IOException{
+        listBooks();
         System.out.println("Informe o nome do livro: ");
         var title = scanner.nextLine();
 
@@ -250,59 +262,57 @@ public class Main{
     }
 
     private void sellBook() throws IOException{
-        System.out.println("Quantos livros serão vendidos?");
-        int numLivros = scanner.nextInt();
+        System.out.println("Quantos diferentes títulos serão vendidos? ");
+        int numBooks = scanner.nextInt();
         scanner.nextLine();
 
-        List<Book> booksToSell = new ArrayList<>(); // Lista de livros vendidos
+        List<Book> booksSell = new ArrayList<>();
         int totalQuantity = 0;
         double total = 0;
 
-        for (int i = 0; i < numLivros; i++) {
+        for (int i = 0; i < numBooks; i++) {
+            listBooks();
             System.out.println("Insira o título do livro " + (i + 1));
             var title = scanner.nextLine();
 
             List<Book> booksFound = bookRepository.findByTitleContainingIgnoreCase(title);
 
-            if (!booksFound.isEmpty()) {
-                booksFound.forEach(b -> System.out.println("ID: " + b.getId() + " Título: " + b.getTitle()));
+            if (booksFound.isEmpty()) {
+                System.out.println("Livro não encotrado");
+                return;
+            }
+            booksFound.forEach(b -> System.out.println("ID: " + b.getId() + " Título: " + b.getTitle()));
 
-                System.out.println("Informe o ID do livro: ");
-                var id = scanner.nextLong();
-                scanner.nextLine();
+            System.out.println("Informe o ID do livro: ");
+            var id = scanner.nextLong();
+            scanner.nextLine();
 
-                Optional<Book> idFound = bookRepository.findByIdEquals(id);
+            Optional<Book> idFound = bookRepository.findByIdEquals(id);
 
-                if (idFound.isPresent()) {
+            if (idFound.isEmpty()) {
+                System.out.println("Livro não encontrado");
+                return;
+            }
 
-                    System.out.println("Informe a quantidade de livros que serão vendidos do livro " + idFound.get().getTitle() + ":");
-                    var quantity = scanner.nextInt();
-                    scanner.nextLine();
+            System.out.println("Informe a quantidade de livros que serão vendidos do livro " + idFound.get().getTitle() + ":");
+            var quantity = scanner.nextInt();
+            scanner.nextLine();
 
-                    if (quantity > idFound.get().getQuantity()) {
-                        System.out.println("Quantidade indisponível para o livro: " + idFound.get().getTitle());
-                        System.out.println("\nQuantitade atual: " + idFound.get().getQuantity());
-                    } else {
-                        double subtotal = idFound.get().getPrice() * quantity;
-                        total += subtotal;
-                        totalQuantity += quantity;
-
-                        bookRepository.sellBook(id, quantity);
-                        booksToSell.add(idFound.get());
-
-                        System.out.println("Subtotal para " + idFound.get().getTitle() + ": " + subtotal);
-                    }
-                } else {
-                    System.out.println("Livro não encontrado!");
-                    displayMenu();
-                }
+            if (quantity > idFound.get().getQuantity()) {
+                System.out.println("Quantidade indisponível para o livro: " + idFound.get().getTitle());
+                System.out.println("\nQuantitade atual: " + idFound.get().getQuantity());
             } else {
-                System.out.println("Livro não encontrado!");
-                displayMenu();
+                double subtotal = idFound.get().getPrice() * quantity;
+                total += subtotal;
+                totalQuantity += quantity;
+
+                bookRepository.sellBook(id, quantity);
+                booksSell.add(idFound.get());
+
+                System.out.println("Subtotal para " + idFound.get().getTitle() + ": " + subtotal);
             }
         }
-
-        if (!booksToSell.isEmpty()) {
+        if (!booksSell.isEmpty()) {
             System.out.println("O total da venda foi de: " + total);
             System.out.println("\nQual será a forma de pagamento?");
             var methods = """
@@ -315,11 +325,10 @@ public class Main{
             System.out.println(methods);
             var method = scanner.nextLine().trim();
 
-            PaymentMethod paymentMethod = PaymentMethod.valueOf(method.toLowerCase());
+            PaymentMethod paymentMethod = PaymentMethod.correctWriting(method.toLowerCase());
 
-            Sell sell = new Sell(total, totalQuantity, paymentMethod, loggedUser, booksToSell);
+            Sell sell = new Sell(total, totalQuantity, paymentMethod, loggedUser, booksSell);
 
-            bookRepository.saveAll(booksToSell);
             sellRepository.save(sell);
 
             System.out.println("Venda realizada com sucesso!");
@@ -331,6 +340,7 @@ public class Main{
     }
 
     private void rentBook() throws IOException{
+        listClients();
         System.out.println("Insira o nome do cliente que irá realizar a locação: ");
         var client = scanner.nextLine();
 
@@ -352,36 +362,128 @@ public class Main{
             System.out.println("Cliente não encontrado!");
             return;
         }
-        System.out.println("Informe o nome do livro que " + foundClient.get().getName() + " irá realizar a locação (SOMENTE UM TÍTULO POR PESSOA)");
-        var book = scanner.nextLine();
 
-        List<Book> bookFound = bookRepository.findByTitleContainingIgnoreCase(book);
-
-        if (bookFound.isEmpty()) {
-            System.out.println("Livro não encontrado!");
-            return;
-        }
-
-        bookFound.forEach(b -> System.out.println("ID: " + b.getId() + " Nome: " + b.getTitle()));
-
-        System.out.println("Informe o ID do livro: ");
-        var bookId = scanner.nextLong();
+        System.out.println("Quantos diferentes títulos serão vendidos? ");
+        int numBooks = scanner.nextInt();
         scanner.nextLine();
 
-        Optional<Book> idFound = bookRepository.findByIdEquals(bookId);
+        List<Book> booksRent= new ArrayList<>();
 
-        if (idFound.isPresent()) {
+        for (int i = 0; i < numBooks; i++){
+            listBooks();
+            System.out.println("Insira o título do livro " + (i + 1));
+            var title = scanner.nextLine();
+
+            List<Book> bookFound = bookRepository.findByTitleContainingIgnoreCase(title);
+
+            if (bookFound.isEmpty()) {
+                System.out.println("Livro não encontrado!");
+                return;
+            }
 
 
-            Rent rent = new Rent(foundClient.get().getName(), loggedUser, book);
+            bookFound.forEach(b -> System.out.println("ID: " + b.getId() + " Nome: " + b.getTitle()));
+
+            System.out.println("Informe o ID do livro: ");
+            var bookId = scanner.nextLong();
+            scanner.nextLine();
+
+            Optional<Book> idFound = bookRepository.findByIdEquals(bookId);
+
+            if (idFound.isEmpty()){
+                System.out.println("Livro não encontrado!");
+                return;
+            }
+
+            if (1 > idFound.get().getQuantity()){
+                System.out.println("Quantidade indisponível para o livro: " + idFound.get().getTitle());
+                System.out.println("\nQuantitade atual: " + idFound.get().getQuantity());
+            } else {
+                bookRepository.rentBook(bookId);
+                booksRent.add(idFound.get());
+            }
+        }
+        if (!booksRent.isEmpty()) {
+
+            Rent rent = new Rent(foundClient.get(), loggedUser, booksRent, dateNow);
             rentRepository.save(rent);
             System.out.println("Locação realizada com sucesso!");
+
             LogGenerator.generateLog("Locação realizada com sucesso pelo usuário " + loggedUser.getName() + ", Especificações da locação " + rent);
 
         } else {
             System.out.println("Livro não encontrado!");
             displayMenu();
         }
+    }
 
+    private void returnRent() throws IOException{
+        Double totalFees = 0.0;
+        String dateRent = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        listRents();
+
+        System.out.println("Informe o ID da locação: ");
+        var rentId = scanner.nextLong();
+
+        Optional<Rent> rentFound = rentRepository.findByIdEquals(rentId);
+
+        if (rentFound.isEmpty()){
+            System.out.println("Não encontrado!");
+            displayMenu();
+        }
+
+        System.out.println("Cliente atrasou a devolução? (SIM/NÃO)");
+        var answer = scanner.nextLine().toLowerCase();
+
+        if (answer.contains("si")){
+            System.out.println("Quantos dias? ");
+            var days = scanner.nextInt();
+
+            totalFees = days * standardFees;
+            return;
+
+        } else if (answer.contains("na")){
+            return;
+        } else {
+            System.out.println("Opção inválida");
+            returnRent();
+        }
+
+        Devolution devolution = new Devolution(loggedUser, rentFound.get(), dateNow, totalFees);
+        bookRepository.devolutionBook(rentFound.get().getBooks());
+        System.out.println("Devolução com sucesso!");
+        LogGenerator.generateLog();
+    }
+
+    private void listClients(){
+        clients = clientRepository.findAll();
+
+        clients.stream()
+                .sorted(Comparator.comparing(Client::getId))
+                .forEach(System.out::println);
+    }
+
+    private void listBooks(){
+        books = bookRepository.findAll();
+
+        books.stream()
+                .sorted(Comparator.comparing(Book::getId))
+                .forEach(System.out::println);
+    }
+
+    private void listSells(){
+        sells = sellRepository.findAll();
+
+        sells.stream()
+                .sorted(Comparator.comparing(Sell::getId))
+                .forEach(System.out::println);
+    }
+
+    private void listRents(){
+        rents = rentRepository.findAll();
+
+        rents.stream()
+                .sorted(Comparator.comparing(Rent::getId))
+                .forEach(System.out::println);
     }
 }
