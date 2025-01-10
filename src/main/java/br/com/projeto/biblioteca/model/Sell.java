@@ -16,7 +16,7 @@ public class Sell {
     private PaymentMethod paymentMethod;
     @ManyToOne
     private User user;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "sell_books",
             joinColumns = @JoinColumn(name = "sell_id"),

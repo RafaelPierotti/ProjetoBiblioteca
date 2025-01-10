@@ -313,7 +313,6 @@ public class Main{
                 book.setQuantity(quantity);
                 book.setPrice(price);
 
-                System.out.println(book);
 
                 bookRepository.save(book);
                 System.out.println("Livro registrado com sucesso!");
